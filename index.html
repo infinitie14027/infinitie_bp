@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinitie b.p.</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Стили для модального окна и изображения */
+        .modal-content {
+            background-color: transparent;
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-image {
+            max-width: 90vw; /* Максимальная ширина изображения */
+            max-height: 90vh; /* Максимальная высота изображения */
+            object-fit: contain; /* Сохраняет пропорции */
+            transition: transform 0.3s ease-in-out;
+            transform: scale(1); /* Изображение изначально увеличено */
+        }
+    </style>
+</head>
+<body class="bg-black text-white" style="--bs-bg-opacity: .94; overflow-x: hidden;">
+    <!-- Шапка -->
+    <header class="bg-black  py-4 ">
+        <div class="container">
+            <div class="d-flex align-items-center justify-content-center">
+                <img src="uploads/logo/logo.png" alt="Логотип" class="me-2" style="height: 64px;">
+                <span class="fs-1 fw-bolder">Infinitie b.p.</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Галерея -->
+    <main class="pt-1">
+        <div class="container-fluid" style="padding-left: 0; padding-right: 0;">
+            <div id="gallery" class="row g-1" style="margin-left: 0; margin-right: 0;">
+                <!-- Изображения будут добавляться сюда -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Модальное окно -->
+    <div id="modal" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <img id="modalImage" src="" alt="Полноразмерное изображение" class="modal-image img-fluid rounded" onclick="closeModal()">
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/masonry/4.2.2/masonry.pkgd.min.js"></script>
+    <script>
+        // Функция для открытия модального окна
+        function openModal(imageSrc) {
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = imageSrc;
+            const modal = new bootstrap.Modal(document.getElementById('modal'));
+            modal.show();
+        }
+
+        // Функция для закрытия модального окна
+        function closeModal() {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modal'));
+            modal.hide();
+        }
+
+        // Загрузка изображений
+        const gallery = document.getElementById('gallery');
+
+        // Добавление изображения в галерею
+        function addImageToGallery(imageSrc) {
+            return new Promise((resolve) => {
+                const col = document.createElement('div');
+                col.className = 'col-md-2 col-4 grid-item row justify-content-md-center'; // Ширина 25% на больших экранах
+                col.style.marginBottom = '16px'; // Отступ снизу
+
+                const card = document.createElement('div');
+                card.className = '';
+
+                const img = document.createElement('img');
+                img.src = imageSrc;
+                img.alt = 'Загруженное изображение';
+                img.className = 'card-img-top rounded w-100 h-auto';
+                img.onclick = () => openModal(imageSrc);
+
+                // Ждем, пока изображение загрузится
+                img.onload = () => {
+                    card.appendChild(img);
+                    col.appendChild(card);
+                    gallery.appendChild(col);
+                    resolve(); // Изображение загружено
+                };
+
+                img.onerror = () => {
+                    console.error('Ошибка загрузки изображения:', imageSrc);
+                    resolve(); // Продолжаем, даже если изображение не загрузилось
+                };
+            });
+        }
+
+        async function loadImages() {
+            const response = await fetch('/images');
+            const images = await response.json();
+
+            // Ожидаем загрузки всех изображений
+            await Promise.all(images.map(image => addImageToGallery(image.url)));
+
+            // Инициализация Masonry после загрузки всех изображений
+            const masonry = new Masonry(gallery, {
+                itemSelector: '.grid-item',
+                columnWidth: '.grid-item',
+                percentPosition: true,
+                gutter: 16, // Отступы между элементами
+            });
+
+            // Пересчет Masonry при изменении размера окна
+            window.addEventListener('resize', () => {
+                masonry.layout();
+            });
+        }
+
+        // Загружаем изображения при загрузке страницы
+        loadImages();
+    </script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinitie b.p. - Админская панель</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Стили для модального окна и изображения */
+        .modal-content {
+            background-color: transparent;
+            border: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-image {
+            max-width: 90vw; /* Максимальная ширина изображения */
+            max-height: 90vh; /* Максимальная высота изображения */
+            object-fit: contain; /* Сохраняет пропорции */
+            transition: transform 0.3s ease-in-out;
+            transform: scale(1); /* Изображение изначально увеличено */
+        }
+    </style>
+</head>
+<body class="bg-black text-white" style="--bs-bg-opacity: .94;">
+    <!-- Шапка -->
+    <header class="bg-black fixed-top py-2">
+        <div class="container">
+            <div class="d-flex align-items-center">
+                <img src="logo.png" alt="Логотип" class="me-2" style="height: 32px;">
+                <span class="fs-5 fw-bold">Infinitie b.p. - Админская панель</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Галерея -->
+    <main class="pt-5">
+        <div class="container py-4">
+            <!-- Форма для загрузки изображений -->
+            <div class="mb-4">
+                <input type="file" id="fileInput" accept="image/*" class="d-none">
+                <label for="fileInput" class="btn btn-primary">Загрузить изображение</label>
+            </div>
+
+            <!-- Контейнер для изображений -->
+            <div id="gallery" class="row g-4">
+                <!-- Изображения будут добавляться сюда -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Модальное окно для авторизации -->
+    <div id="authModal" class="modal fade" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title">Вход в админскую панель</h5>
+                </div>
+                <div class="modal-body">
+                    <input type="password" id="passwordInput" class="form-control" placeholder="Введите пароль">
+                    <div id="errorMessage" class="text-danger mt-2" style="display: none;">Неверный пароль</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="checkPassword()">Войти</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для изображений -->
+    <div id="imageModal" class="modal fade" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <img id="modalImage" src="" alt="Полноразмерное изображение" class="modal-image img-fluid rounded" onclick="closeModal()">
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Пароль для доступа
+        const correctPassword = "140273971";
+
+        // Функция для проверки пароля
+        function checkPassword() {
+            const passwordInput = document.getElementById('passwordInput');
+            const errorMessage = document.getElementById('errorMessage');
+            const authModal = bootstrap.Modal.getInstance(document.getElementById('authModal'));
+
+            if (passwordInput.value === correctPassword) {
+                authModal.hide(); // Закрываем модальное окно авторизации
+            } else {
+                errorMessage.style.display = 'block'; // Показываем сообщение об ошибке
+            }
+        }
+
+        // Показываем модальное окно авторизации при загрузке страницы
+        document.addEventListener('DOMContentLoaded', () => {
+            const authModal = new bootstrap.Modal(document.getElementById('authModal'));
+            authModal.show();
+        });
+
+        // Функция для открытия модального окна с изображением
+        function openModal(imageSrc) {
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = imageSrc;
+            const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+            modal.show();
+        }
+
+        // Функция для закрытия модального окна с изображением
+        function closeModal() {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('imageModal'));
+            modal.hide();
+        }
+
+        // Загрузка изображений
+        const fileInput = document.getElementById('fileInput');
+        const gallery = document.getElementById('gallery');
+
+        // Загрузка изображений при загрузке страницы
+        async function loadImages() {
+            const response = await fetch('/images');
+            const images = await response.json();
+            gallery.innerHTML = ''; // Очищаем галерею перед загрузкой
+            images.forEach(image => addImageToGallery(image.url));
+        }
+
+        // Добавление изображения в галерею
+        function addImageToGallery(imageSrc) {
+            const col = document.createElement('div');
+            col.className = 'col-md-4 col-sm-6';
+            col.innerHTML = `
+                <div class="card bg-black bg-opacity-75 border-0 position-relative">
+                    <img src="${imageSrc}" alt="Загруженное изображение" class="card-img-top rounded" onclick="openModal('${imageSrc}')">
+                    <button onclick="removeImage('${imageSrc}')" class="btn btn-danger position-absolute top-0 end-0 m-2 p-1 rounded-circle">
+                        &times;
+                    </button>
+                </div>
+            `;
+            gallery.appendChild(col);
+        }
+
+        // Удаление изображения
+        async function removeImage(imageSrc) {
+            const filename = imageSrc.split('/').pop();
+            await fetch(`/images/${filename}`, { method: 'DELETE' });
+            loadImages(); // Перезагружаем изображения
+        }
+
+        // Обработка загрузки файла
+        fileInput.addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append('image', file);
+
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+                const result = await response.json();
+                loadImages(); // Перезагружаем изображения
+            }
+        });
+
+        // Загружаем изображения при загрузке страницы
+        loadImages();
+    </script>
+</body>
+</html>
