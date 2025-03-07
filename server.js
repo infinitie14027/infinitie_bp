@@ -37,7 +37,7 @@ app.get('/admin', (req, res) => {
 });
 
 // Маршрут для загрузки изображений
-app.post('/upload', upload.single('image'), (req, res) => {
+app.post('/uploads', upload.single('image'), (req, res) => {
   if (!req.file) {
     return res.status(400).send('Файл не загружен.');
   }
@@ -45,7 +45,7 @@ app.post('/upload', upload.single('image'), (req, res) => {
 });
 
 // Маршрут для получения списка изображений
-app.get('/images', (req, res) => {
+app.get('/uploads', (req, res) => {
   const uploadDir = 'uploads/';
   fs.readdir(uploadDir, (err, files) => {
     if (err) {
