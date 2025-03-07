@@ -104,7 +104,7 @@
         }
 
         async function loadImages() {
-            const response = await fetch('/images');
+            const response = await fetch('/uploads');
             const images = await response.json();
 
             // Ожидаем загрузки всех изображений
