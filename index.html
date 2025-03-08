@@ -103,12 +103,21 @@
             });
         }
 
-        // Загрузка изображений из JSON-файла
+        // Список изображений
+        const images = [
+            'uploads/image1.jpg',
+            'uploads/image2.jpg',
+            'uploads/image3.jpg',
+            'uploads/image4.jpg',
+            'uploads/image5.jpg',
+            'uploads/image6.jpg',
+            'uploads/image7.jpg',
+            // Добавьте сюда все изображения из папки uploads
+        ];
+
+        // Загрузка изображений
         async function loadImages() {
             try {
-                const response = await fetch('images.json'); // Загружаем JSON-файл
-                const images = await response.json(); // Парсим JSON
-
                 // Ожидаем загрузки всех изображений
                 await Promise.all(images.map(image => addImageToGallery(image)));
 
