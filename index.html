@@ -103,28 +103,30 @@
             });
         }
 
+        // Загрузка изображений из JSON-файла
         async function loadImages() {
-            // Пример списка изображений (замените на реальные пути)
-            const images = [
-                { url: 'uploads/image1.jpg' },
-                { url: 'uploads/image2.jpg' },
-            ];
+            try {
+                const response = await fetch('images.json'); // Загружаем JSON-файл
+                const images = await response.json(); // Парсим JSON
 
-            // Ожидаем загрузки всех изображений
-            await Promise.all(images.map(image => addImageToGallery(image.url)));
+                // Ожидаем загрузки всех изображений
+                await Promise.all(images.map(image => addImageToGallery(image)));
 
-            // Инициализация Masonry после загрузки всех изображений
-            const masonry = new Masonry(gallery, {
-                itemSelector: '.grid-item',
-                columnWidth: '.grid-item',
-                percentPosition: true,
-                gutter: 16, // Отступы между элементами
-            });
+                // Инициализация Masonry после загрузки всех изображений
+                const masonry = new Masonry(gallery, {
+                    itemSelector: '.grid-item',
+                    columnWidth: '.grid-item',
+                    percentPosition: true,
+                    gutter: 16, // Отступы между элементами
+                });
 
-            // Пересчет Masonry при изменении размера окна
-            window.addEventListener('resize', () => {
-                masonry.layout();
-            });
+                // Пересчет Masonry при изменении размера окна
+                window.addEventListener('resize', () => {
+                    masonry.layout();
+                });
+            } catch (error) {
+                console.error('Ошибка при загрузке изображений:', error);
+            }
         }
 
         // Загружаем изображения при загрузке страницы
